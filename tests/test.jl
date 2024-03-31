@@ -3,6 +3,7 @@ include(joinpath(@__DIR__, "src", "ForestGenerator_main.jl"))
 using Gadfly
 using Cairo
 using DataFrames
+using Random
 # Test the main function
 λ = 0.01
 area = (100, 100)
@@ -10,7 +11,13 @@ exclusionRadius = 5
 α = 6
 β = 33
 relationship(x) = 2.5 * x +  25.9
+Random.seed!(123)
 positions, diameters, heights = main(λ, area, exclusionRadius, α, β, relationship)
+
+#create with voids
+Random.seed!(123)
+positions_void, diameters_void, heights_void = main(λ, area, exclusionRadius, α, β, relationship, exclusionRadius*5, 5)
+  
 
 df = DataFrame(x=positions[1], y=positions[2], diameter=diameters/2*2.54/100, height=heights)
 

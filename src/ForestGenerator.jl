@@ -28,8 +28,8 @@ function treePositions(trees::Int64, area::Tuple{Union{Int64, Float64}, Union{In
     # area: the area of the forest
     # return: a list of tree positions
 
-    x = rand(Uniform(0, area[1]), trees)
-    y = rand(Uniform(0, area[2]), trees)
+    x = rand(Uniform(0.01, area[1]), trees)
+    y = rand(Uniform(0.01, area[2]), trees)
 
     #compute the distance between trees and make new coordinates if too close
     #additionally, check if new coordinates are too close or not, if not, repeat the process
@@ -77,6 +77,65 @@ function treeHeights(diameters::Vector{Float64}, relationship::Function)
     heights = relationship.(diameters)
     return heights
 
+end
+
+#function that picks a random location, a radius, then removes a tree if it is within the radius
+function removeTree(x::Vector{Float64}, y::Vector{Float64}, area::Tuple{Union{Int64, Float64}, Union{Int64, Float64}},  voidRadius::Union{Int64, Float64})
+    # x: the x coordinates of trees
+    # y: the y coordinates of trees
+    # i: the index of the tree to be removed
+    # voidRadius: the minimum distance between trees
+    # return: the updated x and y coordinates of trees
+
+    #pick a random location
+    voidx = rand(Uniform(0, area[1]))
+    voidy = rand(Uniform(0, area[2]))
+
+    #remove the tree if it is within the radius
+    for j in eachindex(x)
+        
+        distance = sqrt((voidx - x[j])^2 + (voidy - y[j])^2)
+        if distance < voidRadius
+            x[j], y[j] = -1, -1
+        end
+    
+    end
+    x = filter(x->x != -1, x)
+    y = filter(y->y != -1, y)
+    return x, y
+end
+
+#function that takes positions prior to and after voiding, and then finds the heights and diameters that match
+function matchTrees(x::Vector{Float64}, x_void::Vector{Float64}, diameters::Vector{Float64}, heights::Vector{Float64})
+    # x: the x coordinates of trees
+    # y: the y coordinates of trees
+    # x_void: the x coordinates of trees after voiding
+    # y_void: the y coordinates of trees after voiding
+    # diameters: the diameters of trees
+    # heights: the heights of trees
+    # return: the updated diameters and heights of trees
+
+    #find the trees that match the trees from void, and update the diameters and heights positions based on positive matches
+    
+    #find indexes that match between x and x_void
+    match = findall(x->x in x_void, x)
+    diameters_void = diameters[match]
+    heights_void = heights[match]
+    return diameters_void, heights_void
+end
+
+#wrapper function for removeTree and match Trees
+function addVoid(x::Vector{Float64}, y::Vector{Float64}, area::Tuple{Union{Int64, Float64}, Union{Int64, Float64}}, voidRadius::Union{Int64, Float64}, diameters::Vector{Float64}, heights::Vector{Float64})
+    # x: the x coordinates of trees
+    # y: the y coordinates of trees
+    # voidRadius: the minimum distance between trees
+    # diameters: the diameters of trees
+    # heights: the heights of trees
+    # return: the updated x and y coordinates of trees, and the updated diameters and heights of trees
+
+    x_void, y_void = removeTree(x, y,area, voidRadius)
+    diameters_void, heights_void = matchTrees(x, x_void,  diameters, heights)
+    return (x_void, y_void), diameters_void, heights_void
 end
 
 end
